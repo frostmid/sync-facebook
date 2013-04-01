@@ -11,7 +11,7 @@ var parse = {
 			'type': 'urn:types/siab-message',
 			'author': 'https://graph.facebook.com/' + entry.from.id,
 			'title': entry.story || entry.message,
-			'description': entry.description || entry.message || null,
+			'content': entry.description || entry.message || null,
 			'created_time': (new Date (entry.created_time)).getTime (),
 			'metrics': {
 				'comments': entry.comments ? entry.comments.count : 0,
@@ -26,7 +26,7 @@ var parse = {
 			'type': 'urn:types/siab-message',
 			'author': 'https://graph.facebook.com/' + entry.from.id,
 			'title': entry.story,
-			'description': entry.description || null,
+			'content': entry.description || null,
 			'created_time': (new Date (entry.created_time)).getTime (),
 			'metrics': {
 				'comments': entry.comments ? entry.comments.count : 0,
@@ -62,8 +62,7 @@ var parse = {
 		return {
 			'id': 'https://graph.facebook.com/' + entry.id,
 			'type': 'urn:types/siab-message',
-			'title': entry.message,
-			'description': entry.message,
+			'content': entry.message,
 			'author': entry.from ? ('https://graph.facebook.com/' + entry.from.id) : null,
 			'created_time': (new Date (entry.created_time)).getTime ()
 		};
