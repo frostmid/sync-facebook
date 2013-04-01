@@ -7,8 +7,8 @@ var	_ = require ('lodash'),
 var parse = {
 	'status': function (entry) {
 		return {
-			'id': 'https://graph.facebook.com/' + entry.id,
-			'type': 'urn:types/siab-message',
+			'url': 'https://graph.facebook.com/' + entry.id,
+			'entry-type': 'urn:fos:sync:entry-type/cf6681b2f294c4a7a648ed2bf1ea0323',
 			'author': 'https://graph.facebook.com/' + entry.from.id,
 			'title': entry.story || entry.message,
 			'content': entry.description || entry.message || null,
@@ -22,8 +22,8 @@ var parse = {
 
 	'link': function (entry) {
 		return {
-			'id': 'https://graph.facebook.com/' + entry.id,
-			'type': 'urn:types/siab-message',
+			'url': 'https://graph.facebook.com/' + entry.id,
+			'entry-type': 'urn:fos:sync:entry-type/2e63d22f3d4d9c2c1ab11ffc3481d853',
 			'author': 'https://graph.facebook.com/' + entry.from.id,
 			'title': entry.story,
 			'content': entry.description || null,
@@ -37,12 +37,12 @@ var parse = {
 
 	'user': function (entry) {
 		return {
-			'id': 'https://graph.facebook.com/' + entry.id,
-			'type': 'urn:types/siab-message',
+			'url': 'https://graph.facebook.com/' + entry.id,
+			'entry-type': 'urn:fos:sync:entry-type/cf6681b2f294c4a7a648ed2bf1e9c2a8',
 			'first-name': entry.first_name,
 			'family-name': entry.last_name,
 			'email': entry.email,
-			'avatar': entry.picture.data.url,
+			'avatar': entry.picture ? entry.picture.data.url : null,
 			'created_time': (new Date (entry.created_time)).getTime ()
 		};
 	},
@@ -51,8 +51,8 @@ var parse = {
 		var members = _.pluck (entry.to.data, 'name').join (', ');
 
 		return {
-			'id': 'https://graph.facebook.com/' + entry.id,
-			'type': 'urn:types/siab-message',
+			'url': 'https://graph.facebook.com/' + entry.id,
+			'entry-type': 'urn:fos:sync:entry-type/cf6681b2f294c4a7a648ed2bf1ea304d',
 			'title': 'Диалог ' + members,
 			'created_time': (new Date (entry.created_time)).getTime ()
 		};
@@ -60,8 +60,8 @@ var parse = {
 
 	'message': function (entry) {
 		return {
-			'id': 'https://graph.facebook.com/' + entry.id,
-			'type': 'urn:types/siab-message',
+			'url': 'https://graph.facebook.com/' + entry.id,
+			'entry-type': 'urn:fos:sync:entry-type/cf6681b2f294c4a7a648ed2bf1ea7f50',
 			'content': entry.message,
 			'author': entry.from ? ('https://graph.facebook.com/' + entry.from.id) : null,
 			'created_time': (new Date (entry.created_time)).getTime ()
@@ -77,7 +77,8 @@ function facebook (slave, task) {
 	})
 }
 
-var url = 'http://89.179.119.16:8001';
+// var url = 'http://89.179.119.16:8001';
+var url = 'http://127.0.0.1:8001';
 
 (new Slave)
 	.use ('urn:fos:sync:feature/56579b9770f849d75163103de23fc197', function (task) {
@@ -99,6 +100,12 @@ var url = 'http://89.179.119.16:8001';
 	.use ('urn:fos:sync:feature/d4d529f0453ae4e85dd99513101edd38', function (task) {
 		return facebook (this, task).getUserStatuses (task ['facebook-id']);
 	})
+
+	.use ('urn:fos:sync:feature/2e63d22f3d4d9c2c1ab11ffc3486634a', function (task) {
+		return facebook (this, task).getGraphNode (task ['url']);
+	})
+
+	// TODO: Implement explain
 
 	.fail (function (error) {
 		console.error ('Error', error);

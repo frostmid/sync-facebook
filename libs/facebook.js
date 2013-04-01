@@ -143,14 +143,35 @@ _.extend (module.exports.prototype, {
 		return this.post ('/' + userId + '/feed', {
 			message: message
 		});
+	},
 
-		// return this.post ('/114444035404042/comments', {
-		// 	message: message
-		// })
-		// 	.then (console.log)
-		// 	.fail (console.error);
+	getGraphNode: function (url) {
+		var id = url.match (/\/(\d+)/) [1],
+			self = this;
 
-		// console.log ('post status', message);
+		if (id) {
+			return this.get ('/' + id)
+				.then (function (entry) {
+					var fields = _.map (entry.metadata.fields, function (field) {
+						return field.name
+					}).join (',');
+
+					return self.get ('/' + id + '?fields=' + fields);
+				})
+				.then (function (entry) {
+					var type = entry.type;
+
+					if (!type && entry.metadata) {
+						type = entry.metadata.type;
+					}
+
+					self.entry (entry, type);
+
+					if (!type) {
+						console.error ('entry has no type', url, entry);
+					}
+				});
+		}
 	}
 });
 
