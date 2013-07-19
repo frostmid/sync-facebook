@@ -77,10 +77,13 @@ function facebook (slave, task) {
 	})
 }
 
-// var url = 'http://89.179.119.16:8001';
-var url = 'http://127.0.0.1:8001';
+var url = 'http://89.179.119.16:8001';
+// var url = 'http://127.0.0.1:8001';
 
-(new Slave)
+(new Slave ({
+	title: 'facebook api',
+	version: '0.0.1'
+}))
 	.use ('urn:fos:sync:feature/56579b9770f849d75163103de23fc197', function (task) {
 		return facebook (this, task).getUserPosts (task ['facebook-id']);
 	})
