@@ -1,3 +1,5 @@
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 var	_ = require ('lodash'),
 	SocketIO = require ('socket.io-client'),
 	Slave = require ('fos-sync-slave'),
