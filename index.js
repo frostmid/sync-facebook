@@ -1,7 +1,8 @@
 var	_ = require ('lodash'),
 	SocketIO = require ('socket.io-client'),
 	Slave = require ('fos-sync-slave'),
-	Facebook = require ('./libs/facebook');
+	Facebook = require ('./libs/facebook'),
+	url = process.argv [2] || 'http://127.0.0.1:8001';
 
 
 var parse = {
@@ -76,9 +77,6 @@ function facebook (slave, task) {
 		parse: parse
 	})
 }
-
-var url = 'http://89.179.119.16:8001';
-// var url = 'http://127.0.0.1:8001';
 
 (new Slave ({
 	title: 'facebook api',
