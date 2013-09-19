@@ -12,6 +12,7 @@ _.extend (module.exports.prototype, {
 	settings: {
 		base: 'https://graph.facebook.com',
 		locale: 'ru_RU',
+		//accessToken: 'CAACEdEose0cBAGWuJiCxepzc0SAApLL67rNxwgwLWvda5I98TEhfwAXc4xz4hNhFfouMqlzpVoZAQuwZBImJoXbUvLdMmwtKWS1L6qTRpSlFCLttZCBtPyZAqQdv5lE5gZCw0CAABJL9g57JXBe9oWR8fTFPxuS404IE5wjeYUbXMtUQxO9KcVWNFDDZAX0RUZD',
 		accessToken: null,
 		emit: null
 	},
@@ -78,16 +79,17 @@ _.extend (module.exports.prototype, {
 				console.error ('Failed to parse entry', e.message, entry);
 				throw e;
 			}
-			
 
-			Q.when (parsed)
-				.then (this.settings.emit)
-				.fail (function (error) {
+			console.log('111111111111111111', parsed);
+			
+			return Q.when (parsed)
+				.then (this.settings.emit);
+				/*.fail (function (error) {
 					console.log ('Failed to emit entry', error, entry);
 				})
-				.done ();
+				.done ()*/;
 		} else {
-			console.log ('Skipping', entry.id, 'of unkown type', type);
+			console.log ('Skipping', entry.id, 'of unknown type', type);
 		}
 	},
 
@@ -100,9 +102,21 @@ _.extend (module.exports.prototype, {
 			'&metadata=true';
 	},
 
-	getUserPosts: function (userId) {
-		userId = userId || 'me';
-		return this.list ('/' + userId + '/posts', this.entry);
+	getPosts: function (objectId) {
+		objectId = objectId || 'me';
+		return this.list ('/' + objectId + '/posts', this.entry);
+	},
+
+	getFeed: function (objectId) {
+		return this.list ('/' + objectId + '/feed', _.bind (function (entry) {
+			this.entry (entry);
+/*
+			// get comments
+			return this.list ('/' + entry.id + '/comments', _.bind (function (entry) {
+				this.entry (entry);
+			}, this));
+*/
+		}, this));
 	},
 
 	getUserProfile: function (userId) {
@@ -145,9 +159,8 @@ _.extend (module.exports.prototype, {
 		});
 	},
 
-	getGraphNode: function (url) {
-		var id = url.match (/\/(\d+)/) [1],
-			self = this;
+	getGraphNode: function (id) {
+		var self = this;
 
 		if (id) {
 			return this.get ('/' + id)

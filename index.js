@@ -1,21 +1,19 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
 var	_ = require ('lodash'),
+	Promises = require ('vow'),
 	SocketIO = require ('socket.io-client'),
 	Slave = require ('fos-sync-slave'),
-	Facebook = require ('./libs/facebook'),
-	url = process.argv [2] || 'http://127.0.0.1:8001';
+	Facebook = require ('./libs/facebook');
 
 
 var parse = {
 	'status': function (entry) {
 		return {
-			'url': 'https://graph.facebook.com/' + entry.id,
+			'url': 'https://www.facebook.com/' + entry.id,
 			'entry-type': 'urn:fos:sync:entry-type/cf6681b2f294c4a7a648ed2bf1ea0323',
-			'author': 'https://graph.facebook.com/' + entry.from.id,
+			'author': 'https://www.facebook.com/' + entry.from.id,
 			'title': entry.story || entry.message,
 			'content': entry.description || entry.message || null,
-			'created_time': (new Date (entry.created_time)).getTime (),
+			'created_at': (new Date (entry.created_time)).getTime () / 1000,
 			'metrics': {
 				'comments': entry.comments ? entry.comments.count : 0,
 				'likes': entry.likes ? entry.likes.count: 0
@@ -25,12 +23,12 @@ var parse = {
 
 	'link': function (entry) {
 		return {
-			'url': 'https://graph.facebook.com/' + entry.id,
+			'url': 'https://www.facebook.com/' + entry.id,
 			'entry-type': 'urn:fos:sync:entry-type/2e63d22f3d4d9c2c1ab11ffc3481d853',
-			'author': 'https://graph.facebook.com/' + entry.from.id,
-			'title': entry.story,
-			'content': entry.description || null,
-			'created_time': (new Date (entry.created_time)).getTime (),
+			'author': 'https://www.facebook.com/' + entry.from.id,
+			'title': entry.name,
+			'content': entry.message,
+			'created_at': (new Date (entry.created_time)).getTime () / 1000,
 			'metrics': {
 				'comments': entry.comments ? entry.comments.count : 0,
 				'likes': entry.likes ? entry.likes.count: 0
@@ -40,13 +38,13 @@ var parse = {
 
 	'user': function (entry) {
 		return {
-			'url': 'https://graph.facebook.com/' + entry.id,
+			'url': 'https://www.facebook.com/' + entry.id,
 			'entry-type': 'urn:fos:sync:entry-type/cf6681b2f294c4a7a648ed2bf1e9c2a8',
 			'first-name': entry.first_name,
 			'family-name': entry.last_name,
 			'email': entry.email,
 			'avatar': entry.picture ? entry.picture.data.url : null,
-			'created_time': (new Date (entry.created_time)).getTime ()
+			'created_at': (new Date (entry.created_time)).getTime () / 1000
 		};
 	},
 
@@ -54,61 +52,125 @@ var parse = {
 		var members = _.pluck (entry.to.data, 'name').join (', ');
 
 		return {
-			'url': 'https://graph.facebook.com/' + entry.id,
+			'url': 'https://www.facebook.com/' + entry.id,
 			'entry-type': 'urn:fos:sync:entry-type/cf6681b2f294c4a7a648ed2bf1ea304d',
 			'title': 'Диалог ' + members,
-			'created_time': (new Date (entry.created_time)).getTime ()
+			'created_at': (new Date (entry.created_time)).getTime () / 1000
 		};
 	},
 
 	'message': function (entry) {
 		return {
-			'url': 'https://graph.facebook.com/' + entry.id,
+			'url': 'https://www.facebook.com/' + entry.id,
 			'entry-type': 'urn:fos:sync:entry-type/cf6681b2f294c4a7a648ed2bf1ea7f50',
 			'content': entry.message,
-			'author': entry.from ? ('https://graph.facebook.com/' + entry.from.id) : null,
-			'created_time': (new Date (entry.created_time)).getTime ()
+			'author': entry.from ? ('https://www.facebook.com/' + entry.from.id) : null,
+			'created_at': (new Date (entry.created_time)).getTime () / 1000
 		};
+	},
+
+	'page': function (entry) {
+		return {
+			'url': 'https://www.facebook.com/' + entry.id,
+			'entry-type': 'urn:fos:sync:entry-type/1f1d48152476612c3d5931cb927574a7',
+			'title': entry.name
+		}
+	},
+
+	'group': function (entry) {
+		return {
+			'url': 'https://www.facebook.com/' + entry.id,
+			'entry-type': 'urn:fos:sync:entry-type/1f1d48152476612c3d5931cb927574a7',
+			'title': entry.name
+		}
+	},
+
+	'photo': function (entry) {
+		return {
+			'url': 'https://www.facebook.com/' + entry.id,
+			'entry-type': 'urn:fos:sync:entry-type/2bbecff23a38a658eb0d0941411c724a',
+			'title': entry.name
+		}
+	},
+
+	'video': function (entry) {
+		return {
+			'url': 'https://www.facebook.com/' + entry.id,
+			'entry-type': 'urn:fos:sync:entry-type/2bbecff23a38a658eb0d0941411cb191',
+			'title': entry.name
+		}
 	}
 };
 
-function facebook (slave, task) {
+function facebook (slave, task, preEmit) {
 	return new Facebook ({
 		accessToken: task._prefetch.token.access_token,
-		emit: slave.emitter (task),
+		//accessToken: 'CAACEdEose0cBAGWuJiCxepzc0SAApLL67rNxwgwLWvda5I98TEhfwAXc4xz4hNhFfouMqlzpVoZAQuwZBImJoXbUvLdMmwtKWS1L6qTRpSlFCLttZCBtPyZAqQdv5lE5gZCw0CAABJL9g57JXBe9oWR8fTFPxuS404IE5wjeYUbXMtUQxO9KcVWNFDDZAX0RUZD',
+		emit: function (entry) {
+			if (preEmit) {
+				entry = preEmit (entry);
+			}
+			
+			return slave.emitter (task).call (this, entry);
+		},
 		parse: parse
 	})
-}
+};
+
+function getObjectId (url) {
+	var tmp;
+
+	if (url && (tmp = url.match(/facebook.com\/(\d+)$/)))
+	{
+		return tmp [1];
+	}
+
+	return url;
+};
+
+var url = 'http://192.168.1.202:8001';
+// var url = 'http://127.0.0.1:8001';
 
 (new Slave ({
 	title: 'facebook api',
 	version: '0.0.1'
 }))
-	.use ('urn:fos:sync:feature/56579b9770f849d75163103de23fc197', function (task) {
-		return facebook (this, task).getUserPosts (task ['facebook-id']);
+	.use ('urn:fos:sync:feature/56579b9770f849d75163103de23fc197', function getPosts (task) {
+		return facebook (this, task).getPosts (getObjectId (task.url));
 	})
 
-	.use ('urn:fos:sync:feature/04c8d61b0ab10abd2b425c7cf6ff7446', function (task) {
-		return facebook (this, task).getUserProfile (task ['facebook-id']);
+	.use ('urn:fos:sync:feature/04c8d61b0ab10abd2b425c7cf6ff7446', function getUserProfile (task) {
+		var token = task._prefetch.token;
+
+		var preEmit = function (entry) {
+			entry.tokens = [token._id];
+			return entry;
+		};
+
+		return facebook (this, task, preEmit).getUserProfile (getObjectId (task.url));
 	})
 
-	.use ('urn:fos:sync:feature/04c8d61b0ab10abd2b425c7cf6fea33a', function (task) {
-		return facebook (this, task).getUserInbox (task ['facebook-id']);
+	.use ('urn:fos:sync:feature/53b87e0f48f3dec304b32113b82676c6', function getUserInbox (task) {
+		return facebook (this, task).getUserInbox (getObjectId (task.url));
 	})
 
-	.use ('urn:fos:sync:feature/d4d529f0453ae4e85dd99513101c419a', function (task) {
+	.use ('urn:fos:sync:feature/d4d529f0453ae4e85dd99513101c419a', function postUserStatus (task) {
 		return facebook (this, task).postUserStatus (task ['message']);
 	})
 
-	.use ('urn:fos:sync:feature/d4d529f0453ae4e85dd99513101edd38', function (task) {
-		return facebook (this, task).getUserStatuses (task ['facebook-id']);
+	.use ('urn:fos:sync:feature/d4d529f0453ae4e85dd99513101edd38', function getUserStatuses (task) {
+		return facebook (this, task).getUserStatuses (getObjectId (task.url));
 	})
 
-	.use ('urn:fos:sync:feature/2e63d22f3d4d9c2c1ab11ffc3486634a', function (task) {
-		return facebook (this, task).getGraphNode (task ['url']);
+	.use ('urn:fos:sync:feature/2bbecff23a38a658eb0d09414120d425', function getFeed (task) {
+		return facebook (this, task).getFeed (getObjectId (task.url));
 	})
 
-	// TODO: Implement explain
+	//.use ('urn:fos:sync:feature/2e63d22f3d4d9c2c1ab11ffc3486634a', function (task) {
+
+	.use ('urn:fos:sync:feature/c12087cdb5bee2f607e73d5c68c57dd0', function explain (task) {
+		return facebook (this, task).getGraphNode (getObjectId (task.url));
+	})
 
 	.fail (function (error) {
 		console.error ('Error', error);
@@ -122,3 +184,8 @@ function facebook (slave, task) {
 
 	.connect (SocketIO, url);
 
+/*поиск по русски
+поиск по сайтам, где комменты оставлены от fb (с лайками и прочими, сслыка где оставлен коммент)
+
+
+*/
