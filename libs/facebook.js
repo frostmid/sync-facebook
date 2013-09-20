@@ -80,7 +80,7 @@ _.extend (module.exports.prototype, {
 				throw e;
 			}
 
-			console.log('* emit', parsed);
+			console.log('* emit', parsed.url);
 			
 			return Q.when (parsed)
 				.then (this.settings.emit);
@@ -165,9 +165,14 @@ _.extend (module.exports.prototype, {
 		if (id) {
 			return this.get ('/' + id)
 				.then (function (entry) {
-					var fields = _.map (entry.metadata.fields, function (field) {
-						return field.name
-					}).join (',');
+					var fields = _.map (
+						_.filter (entry.metadata.fields, function (field) {
+							return field.name != 'payment_mobile_pricepoints';
+						}),
+						function (field) {
+							return field.name;
+						}
+					).join (',');
 
 					return self.get ('/' + id + '?fields=' + fields);
 				})
@@ -181,7 +186,7 @@ _.extend (module.exports.prototype, {
 					self.entry (entry, type);
 
 					if (!type) {
-						console.error ('entry has no type', url, entry);
+						console.error ('entry has no type', id, entry);
 					}
 				});
 		}
