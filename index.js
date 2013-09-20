@@ -47,7 +47,7 @@ var parse = {
 			'family-name': entry.last_name,
 			'email': entry.email,
 			'avatar': entry.picture ? entry.picture.data.url : null,
-			'created_at': (new Date (entry.created_time || entry.updated_time)).getTime () / 1000
+			'created_at': null
 		};
 	},
 
