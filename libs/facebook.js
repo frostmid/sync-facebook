@@ -80,7 +80,7 @@ _.extend (module.exports.prototype, {
 				throw e;
 			}
 
-			console.log('111111111111111111', parsed);
+			console.log('* emit', parsed);
 			
 			return Q.when (parsed)
 				.then (this.settings.emit);
@@ -122,7 +122,7 @@ _.extend (module.exports.prototype, {
 	getUserProfile: function (userId) {
 		userId = userId || 'me';
 
-		return this.get ('/' + userId + '?fields=id,first_name,last_name,picture,email')
+		return this.get ('/' + userId + '?fields=id,first_name,last_name,picture,email,updated_time')
 			.then (this.entry);
 	},
 

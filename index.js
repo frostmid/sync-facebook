@@ -1,8 +1,11 @@
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 var	_ = require ('lodash'),
 	Promises = require ('vow'),
 	SocketIO = require ('socket.io-client'),
 	Slave = require ('fos-sync-slave'),
-	Facebook = require ('./libs/facebook');
+	Facebook = require ('./libs/facebook'),
+	url = process.argv [2] || 'http://127.0.0.1:8001';
 
 
 var parse = {
@@ -44,7 +47,7 @@ var parse = {
 			'family-name': entry.last_name,
 			'email': entry.email,
 			'avatar': entry.picture ? entry.picture.data.url : null,
-			'created_at': (new Date (entry.created_time)).getTime () / 1000
+			'created_at': (new Date (entry.created_time || entry.updated_time)).getTime () / 1000
 		};
 	},
 
@@ -127,9 +130,6 @@ function getObjectId (url) {
 
 	return url;
 };
-
-var url = 'http://192.168.1.202:8001';
-// var url = 'http://127.0.0.1:8001';
 
 (new Slave ({
 	title: 'facebook api',
