@@ -1,5 +1,6 @@
 var	_ = require ('lodash'),
 	Q = require ('q'),
+	Promises = require ('vow'),
 	request = require ('fos-request');
 
 
@@ -53,12 +54,14 @@ _.extend (module.exports.prototype, {
 				promises = _.map (results.data, iterator);
 			}
 
+/*
 			if (results.paging) {
 				// TODO: Uncomment that (disabled to reduce limits usage while developing)
 				promises.push (
 					fetchMore (results.paging.next)
 				);
 			}
+			*/
 
 			return Q.all (promises);
 		};
@@ -104,7 +107,18 @@ _.extend (module.exports.prototype, {
 
 	getPosts: function (objectId) {
 		objectId = objectId || 'me';
-		return this.list ('/' + objectId + '/posts', this.entry);
+		return this.list ('/' + objectId + '/posts', _.bind (function (entry) {
+			var parent_entry = entry;
+			this.entry (parent_entry);
+
+			if(entry.comments && entry.comments.data.length)
+			{
+				return this.list ('/' + parent_entry.id + '/comments', _.bind (function (entry) {
+					entry.ancestor = entry.parent ? entry.parent : 'http://www.facebook.com/' + parent_entry.id;
+					this.entry (entry, 'comment');
+				}, this));
+			}
+		}, this));
 	},
 
 	getFeed: function (objectId) {
@@ -134,10 +148,13 @@ _.extend (module.exports.prototype, {
 		// get threads
 		return this.list ('/' + userId + '/inbox', _.bind (function (entry) {
 			// if (once) return else once = true
-			this.entry (entry, 'thread');
+			var parent_entry = entry;
+			this.entry (parent_entry, 'thread');
 
 			// get messages in thread
-			return this.list ('/' + entry.id + '/comments', _.bind (function (entry) {
+			return this.list ('/' + parent_entry.id + '/comments', _.bind (function (entry) {
+				entry.ancestor = 'http://www.facebook.com/' + parent_entry.id;
+
 				this.entry (entry, 'message');
 			}, this));
 		}, this));
@@ -165,16 +182,34 @@ _.extend (module.exports.prototype, {
 		if (id) {
 			return this.get ('/' + id)
 				.then (function (entry) {
-					var fields = _.map (
-						_.filter (entry.metadata.fields, function (field) {
-							return field.name != 'payment_mobile_pricepoints';
-						}),
-						function (field) {
-							return field.name;
-						}
-					).join (',');
 
-					return self.get ('/' + id + '?fields=' + fields);
+					var getFields = function (entry) {
+						var promise = Promises.promise();
+
+						if (entry.metadata) {
+							promise.fulfill (entry.metadata.fields);
+						} else {
+							self.get('/' + entry.id)
+								.then(function (entry) {
+									promise.fulfill (entry.metadata.fields);
+								});
+						}
+
+						return promise;
+					};
+
+					return getFields (entry).then(function (fields) {
+						var fields = _.map (
+							_.filter (fields, function (field) {
+								return field.name != 'payment_mobile_pricepoints';
+							}),
+							function (field) {
+								return field.name;
+							}
+						).join (',');
+
+						return self.get ('/' + id + '?fields=' + fields);
+					});
 				})
 				.then (function (entry) {
 					var type = entry.type;

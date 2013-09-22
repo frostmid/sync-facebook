@@ -5,7 +5,7 @@ var	_ = require ('lodash'),
 	SocketIO = require ('socket.io-client'),
 	Slave = require ('fos-sync-slave'),
 	Facebook = require ('./libs/facebook'),
-	url = process.argv [2] || 'http://127.0.0.1:8001';
+	url = process.argv [2] || 'http://192.168.104.254:8001';
 
 
 var parse = {
@@ -14,6 +14,7 @@ var parse = {
 			'url': 'https://www.facebook.com/' + entry.id,
 			'entry-type': 'urn:fos:sync:entry-type/cf6681b2f294c4a7a648ed2bf1ea0323',
 			'author': 'https://www.facebook.com/' + entry.from.id,
+			'ancestor': entry.ancestor || null,
 			'title': entry.story || entry.message,
 			'content': entry.description || entry.message || null,
 			'created_at': (new Date (entry.created_time)).getTime () / 1000,
@@ -29,12 +30,13 @@ var parse = {
 			'url': 'https://www.facebook.com/' + entry.id,
 			'entry-type': 'urn:fos:sync:entry-type/2e63d22f3d4d9c2c1ab11ffc3481d853',
 			'author': 'https://www.facebook.com/' + entry.from.id,
+			'ancestor': entry.ancestor || null,
 			'title': entry.name,
 			'content': entry.message,
 			'created_at': (new Date (entry.created_time)).getTime () / 1000,
 			'metrics': {
-				'comments': entry.comments ? entry.comments.count : 0,
-				'likes': entry.likes ? entry.likes.count: 0
+				'comments': entry.comments ? entry.comments.data.length : 0,
+				'likes': entry.likes ? entry.likes.data.length: 0
 			}
 		};
 	},
@@ -47,7 +49,9 @@ var parse = {
 			'family-name': entry.last_name,
 			'email': entry.email,
 			'avatar': entry.picture ? entry.picture.data.url : null,
-			'created_at': null
+			'created_at': null,
+
+			'nickname': entry.first_name
 		};
 	},
 
@@ -58,7 +62,7 @@ var parse = {
 			'url': 'https://www.facebook.com/' + entry.id,
 			'entry-type': 'urn:fos:sync:entry-type/cf6681b2f294c4a7a648ed2bf1ea304d',
 			'title': 'Диалог ' + members,
-			'created_at': (new Date (entry.created_time)).getTime () / 1000
+			//'created_at': (new Date (entry.updated_time)).getTime () / 1000
 		};
 	},
 
@@ -67,6 +71,7 @@ var parse = {
 			'url': 'https://www.facebook.com/' + entry.id,
 			'entry-type': 'urn:fos:sync:entry-type/cf6681b2f294c4a7a648ed2bf1ea7f50',
 			'content': entry.message,
+			'ancestor': entry.ancestor || null,
 			'author': entry.from ? ('https://www.facebook.com/' + entry.from.id) : null,
 			'created_at': (new Date (entry.created_time)).getTime () / 1000
 		};
@@ -76,7 +81,11 @@ var parse = {
 		return {
 			'url': 'https://www.facebook.com/' + entry.id,
 			'entry-type': 'urn:fos:sync:entry-type/1f1d48152476612c3d5931cb927574a7',
-			'title': entry.name
+			'title': entry.name,
+			'avatar': entry.picture ? entry.picture.data.url : null,
+
+			'created_at': null,
+			'first-name': entry.name
 		}
 	},
 
@@ -84,8 +93,25 @@ var parse = {
 		return {
 			'url': 'https://www.facebook.com/' + entry.id,
 			'entry-type': 'urn:fos:sync:entry-type/1f1d48152476612c3d5931cb927574a7',
-			'title': entry.name
+			'title': entry.name,
+			'avatar': entry.picture ? entry.picture.data.url : null
 		}
+	},
+
+	'comment': function (entry) {
+		return {
+			'url': 'https://www.facebook.com/' + entry.id,
+			'entry-type': 'urn:fos:sync:entry-type/e5ce7e5ee754309096f0efe1f70d7bac',
+			'author': 'https://www.facebook.com/' + entry.from.id,
+			'ancestor': entry.ancestor || null,
+			'title': entry.name,
+			'content': entry.message,
+			'created_at': (new Date (entry.created_time)).getTime () / 1000,
+			'metrics': {
+				'comments': entry.comment_count ? entry.comment_count : 0,
+				'likes': entry.like_count ? entry.like_count: 0
+			}
+		};
 	},
 
 	'photo': function (entry) {
@@ -103,6 +129,7 @@ var parse = {
 			'title': entry.name
 		}
 	}
+	
 };
 
 function facebook (slave, task, preEmit) {
@@ -123,9 +150,9 @@ function facebook (slave, task, preEmit) {
 function getObjectId (url) {
 	var tmp;
 
-	if (url && (tmp = url.match(/facebook.com\/(\d+)$/)))
+	if (url && (tmp = url.match(/facebook.com\/(\d+)(|\_(\d+))$/)))
 	{
-		return tmp [1];
+		return tmp [1] + (tmp [2] ? tmp [2] : '');
 	}
 
 	return url;
@@ -169,6 +196,8 @@ function getObjectId (url) {
 	//.use ('urn:fos:sync:feature/2e63d22f3d4d9c2c1ab11ffc3486634a', function (task) {
 
 	.use ('urn:fos:sync:feature/c12087cdb5bee2f607e73d5c68c57dd0', function explain (task) {
+		console.log('explain');
+
 		return facebook (this, task).getGraphNode (getObjectId (task.url));
 	})
 
