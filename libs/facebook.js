@@ -13,7 +13,6 @@ _.extend (module.exports.prototype, {
 	settings: {
 		base: 'https://graph.facebook.com',
 		locale: 'ru_RU',
-		//accessToken: 'CAACEdEose0cBAGWuJiCxepzc0SAApLL67rNxwgwLWvda5I98TEhfwAXc4xz4hNhFfouMqlzpVoZAQuwZBImJoXbUvLdMmwtKWS1L6qTRpSlFCLttZCBtPyZAqQdv5lE5gZCw0CAABJL9g57JXBe9oWR8fTFPxuS404IE5wjeYUbXMtUQxO9KcVWNFDDZAX0RUZD',
 		accessToken: null,
 		emit: null
 	},
@@ -86,11 +85,11 @@ _.extend (module.exports.prototype, {
 			console.log('* emit', parsed.url);
 			
 			return Q.when (parsed)
-				.then (this.settings.emit);
-				/*.fail (function (error) {
+				.then (this.settings.emit)
+				.fail (function (error) {
 					console.log ('Failed to emit entry', error, entry);
 				})
-				.done ()*/;
+				.done ();
 		} else {
 			console.log ('Skipping', entry.id, 'of unknown type', type);
 		}
@@ -105,35 +104,41 @@ _.extend (module.exports.prototype, {
 			'&metadata=true';
 	},
 
+	getComments: function (entry) {
+
+		if(entry.comments && entry.comments.data.length)
+		{
+			return this.list ('/' + entry.id + '/comments', _.bind (function (result) {
+				result.ancestor = result.parent ? result.parent : 'https://www.facebook.com/' + entry.id;
+				this.entry (result, 'comment');
+			}, this));
+		} else {
+			return null;
+		}
+	},
+
 	getPosts: function (objectId) {
 		objectId = objectId || 'me';
-		return this.list ('/' + objectId + '/posts', _.bind (function (entry) {
-			var parent_entry = entry;
-			this.entry (parent_entry);
 
-			if(parent_entry.comments && parent_entry.comments.data.length)
-			{
-				return this.list ('/' + parent_entry.id + '/comments', _.bind (function (entry) {
-					entry.ancestor = entry.parent ? entry.parent : 'https://www.facebook.com/' + parent_entry.id;
-					this.entry (entry, 'comment');
-				}, this));
-			}
+		return this.list ('/' + objectId + '/posts', _.bind (function (entry) {
+			entry.ancestor = 'https://www.facebook.com/' + objectId;
+
+			return Q.all ([
+				this.entry (entry),
+				this.getComments (entry)
+			]);
+
 		}, this));
 	},
 
 	getFeed: function (objectId) {
 		return this.list ('/' + objectId + '/feed', _.bind (function (entry) {
-			var parent_entry = entry;
-			this.entry (parent_entry);
-
-			// get comments
-			if (parent_entry.comments && parent_entry.comments.data.length)
-			{
-				return this.list ('/' + parent_entry.id + '/comments', _.bind (function (entry) {
-					entry.ancestor = 'https://www.facebook.com/' + parent_entry.id;
-					this.entry (entry);
-				}, this));
-			}
+			entry.ancestor = 'https://www.facebook.com/' + objectId;
+			
+			return Q.all ([
+				this.entry (entry),
+				this.getComments (entry)
+			]);
 		}, this));
 	},
 
@@ -151,16 +156,10 @@ _.extend (module.exports.prototype, {
 
 		// get threads
 		return this.list ('/' + userId + '/inbox', _.bind (function (entry) {
-			// if (once) return else once = true
-			var parent_entry = entry;
-			this.entry (parent_entry, 'thread');
-
-			// get messages in thread
-			return this.list ('/' + parent_entry.id + '/comments', _.bind (function (entry) {
-				entry.ancestor = 'https://www.facebook.com/' + parent_entry.id;
-
-				this.entry (entry, 'message');
-			}, this));
+			return Q.all ([
+				this.entry (entry, 'thread'),
+				this.getComments (entry)
+			]);
 		}, this));
 	},
 
@@ -168,20 +167,10 @@ _.extend (module.exports.prototype, {
 		userId = userId || 'me';
 
 		return this.list ('/' + userId + '/statuses', _.bind (function (entry) {
-			var parent_entry = entry;
-
-			this.entry (parent_entry, 'status');
-
-			// get comments
-			if (parent_entry.comments && parent_entry.comments.data.length)
-			{
-				return this.list ('/' + parent_entry.id + '/comments', _.bind (function (entry) {
-					entry.ancestor = 'https://www.facebook.com/' + parent_entry.id;
-
-					this.entry (entry, 'comment');
-				}, this));
-			}
-
+			return Q.all ([
+				this.entry (entry, 'status'),
+				this.getComments (entry, 'comment')
+			]);
 		}, this));
 	},
 

@@ -6,8 +6,8 @@ var	_ = require ('lodash'),
 	Slave = require ('fos-sync-slave'),
 	Facebook = require ('./libs/facebook'),
 	url = process.argv [2] || 
-		'http://127.0.0.1:8001'
-		//'http://192.168.104.254:8001'
+		//'http://127.0.0.1:8001'
+		'http://192.168.104.254:8001'
 	;
 
 
@@ -105,7 +105,7 @@ var parse = {
 		return {
 			'url': 'https://www.facebook.com/' + entry.id,
 			'entry-type': 'urn:fos:sync:entry-type/e5ce7e5ee754309096f0efe1f70d7bac',
-			'author': 'https://www.facebook.com/' + entry.from.id,
+			'author': entry.from ? ('https://www.facebook.com/' + entry.from.id) : null,
 			'ancestor': entry.ancestor || null,
 			'title': entry.name,
 			'content': entry.message,
@@ -115,7 +115,7 @@ var parse = {
 				'likes': entry.like_count ? entry.like_count: 0
 			},
 			'issue': entry.issue || null
-		};
+		}
 	},
 
 	'photo': function (entry) {
@@ -138,12 +138,12 @@ var parse = {
 		}
 	}
 	
+	
 };
 
 function facebook (slave, task, preEmit) {
 	return new Facebook ({
 		accessToken: task._prefetch.token.access_token,
-		//accessToken: 'CAACEdEose0cBAGWuJiCxepzc0SAApLL67rNxwgwLWvda5I98TEhfwAXc4xz4hNhFfouMqlzpVoZAQuwZBImJoXbUvLdMmwtKWS1L6qTRpSlFCLttZCBtPyZAqQdv5lE5gZCw0CAABJL9g57JXBe9oWR8fTFPxuS404IE5wjeYUbXMtUQxO9KcVWNFDDZAX0RUZD',
 		emit: function (entry) {
 			if (preEmit) {
 				entry = preEmit (entry);
@@ -206,8 +206,6 @@ function getObjectId (url) {
 	})
 
 	.use ('urn:fos:sync:feature/c12087cdb5bee2f607e73d5c68c57dd0', function (task) {
-		console.log('explain');
-
 		return facebook (this, task).getGraphNode (getObjectId (task.url));
 	})
 
@@ -222,9 +220,3 @@ function getObjectId (url) {
 	})
 
 	.connect (SocketIO, url);
-
-/*поиск по русски
-поиск по сайтам, где комменты оставлены от fb (с лайками и прочими, сслыка где оставлен коммент)
-
-
-*/
