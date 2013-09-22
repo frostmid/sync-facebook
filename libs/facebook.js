@@ -111,7 +111,7 @@ _.extend (module.exports.prototype, {
 			var parent_entry = entry;
 			this.entry (parent_entry);
 
-			if(entry.comments && entry.comments.data.length)
+			if(parent_entry.comments && parent_entry.comments.data.length)
 			{
 				return this.list ('/' + parent_entry.id + '/comments', _.bind (function (entry) {
 					entry.ancestor = entry.parent ? entry.parent : 'https://www.facebook.com/' + parent_entry.id;
@@ -123,13 +123,17 @@ _.extend (module.exports.prototype, {
 
 	getFeed: function (objectId) {
 		return this.list ('/' + objectId + '/feed', _.bind (function (entry) {
-			this.entry (entry);
-/*
+			var parent_entry = entry;
+			this.entry (parent_entry);
+
 			// get comments
-			return this.list ('/' + entry.id + '/comments', _.bind (function (entry) {
-				this.entry (entry);
-			}, this));
-*/
+			if (parent_entry.comments && parent_entry.comments.data.length)
+			{
+				return this.list ('/' + parent_entry.id + '/comments', _.bind (function (entry) {
+					entry.ancestor = 'https://www.facebook.com/' + parent_entry.id;
+					this.entry (entry);
+				}, this));
+			}
 		}, this));
 	},
 
@@ -164,7 +168,20 @@ _.extend (module.exports.prototype, {
 		userId = userId || 'me';
 
 		return this.list ('/' + userId + '/statuses', _.bind (function (entry) {
-			this.entry (entry, 'status');
+			var parent_entry = entry;
+
+			this.entry (parent_entry, 'status');
+
+			// get comments
+			if (parent_entry.comments && parent_entry.comments.data.length)
+			{
+				return this.list ('/' + parent_entry.id + '/comments', _.bind (function (entry) {
+					entry.ancestor = 'https://www.facebook.com/' + parent_entry.id;
+
+					this.entry (entry, 'comment');
+				}, this));
+			}
+
 		}, this));
 	},
 
@@ -186,7 +203,7 @@ _.extend (module.exports.prototype, {
 
 				switch (type)
 				{
-					'user': url = '/' + objectId + '/'; break;
+					//'user': url = '/' + objectId + '/'; break;
 					default: url = '/' + objectId + '/comments?message=' + message;
 				}
 

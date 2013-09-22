@@ -178,29 +178,27 @@ function getObjectId (url) {
 		return facebook (this, task, preEmit).getUserProfile (getObjectId (task.url));
 	})
 
-	.use ('urn:fos:sync:feature/53b87e0f48f3dec304b32113b82676c6', function getUserInbox (task) {
+	.use ('urn:fos:sync:feature/53b87e0f48f3dec304b32113b82676c6', function (task) {
 		return facebook (this, task).getUserInbox (getObjectId (task.url));
 	})
 
-	.use ('urn:fos:sync:feature/d4d529f0453ae4e85dd99513101c419a', function postUserStatus (task) {
+	.use ('urn:fos:sync:feature/d4d529f0453ae4e85dd99513101c419a', function (task) {
 		return facebook (this, task).postUserStatus (task ['message']);
 	})
 
-	.use ('urn:fos:sync:feature/d4d529f0453ae4e85dd99513101edd38', function getUserStatuses (task) {
+	.use ('urn:fos:sync:feature/d4d529f0453ae4e85dd99513101edd38', function (task) {
 		return facebook (this, task).getUserStatuses (getObjectId (task.url));
 	})
 
-	.use ('urn:fos:sync:feature/2bbecff23a38a658eb0d09414120d425', function getFeed (task) {
+	.use ('urn:fos:sync:feature/2bbecff23a38a658eb0d09414120d425', function (task) {
 		return facebook (this, task).getFeed (getObjectId (task.url));
 	})
 
-	.use ('urn:fos:sync:feature/04c8d61b0ab10abd2b425c7cf6ff2bda', function reply (task) {
+	.use ('urn:fos:sync:feature/04c8d61b0ab10abd2b425c7cf6ff2bda', function (task) {
 		return facebook (this, task).reply (getObjectId (task.url), task.content, task.issue);
 	})
 
-	//.use ('urn:fos:sync:feature/2e63d22f3d4d9c2c1ab11ffc3486634a', function (task) {
-
-	.use ('urn:fos:sync:feature/c12087cdb5bee2f607e73d5c68c57dd0', function explain (task) {
+	.use ('urn:fos:sync:feature/c12087cdb5bee2f607e73d5c68c57dd0', function (task) {
 		console.log('explain');
 
 		return facebook (this, task).getGraphNode (getObjectId (task.url));
