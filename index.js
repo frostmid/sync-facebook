@@ -140,6 +140,10 @@ function facebook (slave, task, preEmit) {
 			if (preEmit) {
 				entry = preEmit (entry);
 			}
+
+			if (entry.url) {
+				entry.url = entry.url.replace (/^https:\/\//, 'http://');
+			}
 			
 			return slave.emitter (task).call (this, entry);
 		},
