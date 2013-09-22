@@ -114,7 +114,7 @@ _.extend (module.exports.prototype, {
 			if(entry.comments && entry.comments.data.length)
 			{
 				return this.list ('/' + parent_entry.id + '/comments', _.bind (function (entry) {
-					entry.ancestor = entry.parent ? entry.parent : 'http://www.facebook.com/' + parent_entry.id;
+					entry.ancestor = entry.parent ? entry.parent : 'https://www.facebook.com/' + parent_entry.id;
 					this.entry (entry, 'comment');
 				}, this));
 			}
@@ -153,7 +153,7 @@ _.extend (module.exports.prototype, {
 
 			// get messages in thread
 			return this.list ('/' + parent_entry.id + '/comments', _.bind (function (entry) {
-				entry.ancestor = 'http://www.facebook.com/' + parent_entry.id;
+				entry.ancestor = 'https://www.facebook.com/' + parent_entry.id;
 
 				this.entry (entry, 'message');
 			}, this));
@@ -174,6 +174,31 @@ _.extend (module.exports.prototype, {
 		return this.post ('/' + userId + '/feed', {
 			message: message
 		});
+	},
+
+	reply: function (objectId, message, issue) {
+		var self = this,
+			url;
+
+		return self.get('/' + objectId)
+			.then(function (entry) {
+				var type = entry.type || (entry.metadata ? entry.metadata.type : null);
+
+				switch (type)
+				{
+					'user': url = '/' + objectId + '/'; break;
+					default: url = '/' + objectId + '/comments?message=' + message;
+				}
+
+				return self.post (url).then(function (entry) {
+					return self.get('/' + (entry.id || entry))
+						.then(function (entry) {
+							entry.ancestor = 'https://www.facebook.com/' + objectId;
+							entry.issue = issue;
+							self.entry (entry, 'comment');
+						});
+				});
+			});
 	},
 
 	getGraphNode: function (id) {

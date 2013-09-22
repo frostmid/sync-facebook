@@ -110,7 +110,8 @@ var parse = {
 			'metrics': {
 				'comments': entry.comment_count ? entry.comment_count : 0,
 				'likes': entry.like_count ? entry.like_count: 0
-			}
+			},
+			'issue': entry.issue || null
 		};
 	},
 
@@ -139,10 +140,6 @@ function facebook (slave, task, preEmit) {
 		emit: function (entry) {
 			if (preEmit) {
 				entry = preEmit (entry);
-			}
-
-			if (entry.url) {
-				entry.url = entry.url.replace (/^https:\/\//, 'http://');
 			}
 			
 			return slave.emitter (task).call (this, entry);
@@ -195,6 +192,10 @@ function getObjectId (url) {
 
 	.use ('urn:fos:sync:feature/2bbecff23a38a658eb0d09414120d425', function getFeed (task) {
 		return facebook (this, task).getFeed (getObjectId (task.url));
+	})
+
+	.use ('urn:fos:sync:feature/04c8d61b0ab10abd2b425c7cf6ff2bda', function reply (task) {
+		return facebook (this, task).reply (getObjectId (task.url), task.content, task.issue);
 	})
 
 	//.use ('urn:fos:sync:feature/2e63d22f3d4d9c2c1ab11ffc3486634a', function (task) {
