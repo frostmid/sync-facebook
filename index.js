@@ -5,7 +5,10 @@ var	_ = require ('lodash'),
 	SocketIO = require ('socket.io-client'),
 	Slave = require ('fos-sync-slave'),
 	Facebook = require ('./libs/facebook'),
-	url = process.argv [2] || 'http://192.168.104.254:8001';
+	url = process.argv [2] || 
+		'http://127.0.0.1:8001'
+		//'http://192.168.104.254:8001'
+	;
 
 
 var parse = {
@@ -118,16 +121,20 @@ var parse = {
 	'photo': function (entry) {
 		return {
 			'url': 'https://www.facebook.com/' + entry.id,
-			'entry-type': 'urn:fos:sync:entry-type/2bbecff23a38a658eb0d0941411c724a',
-			'title': entry.name
+			'entry-type': 'urn:fos:sync:entry-type/9414c18c2684a3d6dd8ae694301411dd',
+			'title': entry.name,
+			'content': entry.message || null,
+			'ancestor': entry.ancestor || null
 		}
 	},
 
 	'video': function (entry) {
 		return {
 			'url': 'https://www.facebook.com/' + entry.id,
-			'entry-type': 'urn:fos:sync:entry-type/2bbecff23a38a658eb0d0941411cb191',
-			'title': entry.name
+			'entry-type': 'urn:fos:sync:entry-type/9414c18c2684a3d6dd8ae69430143e6d',
+			'title': entry.name,
+			'content': entry.message || null,
+			'ancestor': entry.ancestor || null
 		}
 	}
 	
