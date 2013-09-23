@@ -118,10 +118,8 @@ _.extend (module.exports.prototype, {
 	},
 
 	getPosts: function (objectId) {
-		objectId = objectId || 'me';
-
-		return this.list ('/' + objectId + '/posts', _.bind (function (entry) {
-			entry.ancestor = 'https://www.facebook.com/' + entry.id;
+		return this.list ('/' + (objectId || 'me') + '/posts', _.bind (function (entry) {
+			//entry.ancestor = 'https://www.facebook.com/' + entry.id + '/posts';
 
 			return Q.all ([
 				this.entry (entry),
@@ -133,7 +131,7 @@ _.extend (module.exports.prototype, {
 
 	getFeed: function (objectId) {
 		return this.list ('/' + objectId + '/feed', _.bind (function (entry) {
-			entry.ancestor = 'https://www.facebook.com/' + objectId;
+			//entry.ancestor = 'https://www.facebook.com/' + entry.id + '/feed' ;
 			
 			return Q.all ([
 				this.entry (entry),

@@ -6,8 +6,8 @@ var	_ = require ('lodash'),
 	Slave = require ('fos-sync-slave'),
 	Facebook = require ('./libs/facebook'),
 	url = process.argv [2] || 
-		'http://127.0.0.1:8001'
-		//'http://192.168.104.254:8001'
+		//'http://127.0.0.1:8001'
+		'http://192.168.104.254:8001'
 	;
 
 
@@ -138,6 +138,14 @@ var parse = {
 			'content': entry.message || null,
 			'ancestor': entry.ancestor || null
 		}
+	},
+
+	'posts': function (url) {
+		return {
+			'url': url,
+			'entry-type': 'urn:fos:sync:entry-type/e242b98044c627d2009df1ad9267cff2',
+			'title': 'FB Wall'
+		}
 	}
 
 	
@@ -208,6 +216,11 @@ function getObjectId (url) {
 	})
 
 	.use ('urn:fos:sync:feature/c12087cdb5bee2f607e73d5c68c57dd0', function (task) {
+		if (task.url.match(/facebook.com\/(\d)\/posts$/) || task.url.match(/facebook.com\/(\d)\/feed$/))
+		{
+			return this.entry (task.url, 'posts');
+		}
+		
 		return facebook (this, task).getGraphNode (getObjectId (task.url));
 	})
 
