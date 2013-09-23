@@ -122,7 +122,6 @@ var parse = {
 		}
 	},
 
-// Trouble is here!!!
 	'photo': function (entry) {
 		return {
 			'url': 'https://www.facebook.com/' + entry.id,
@@ -131,6 +130,7 @@ var parse = {
 			'title': entry.name,
 			'content': entry.message || null,
 			'ancestor': entry.ancestor || null,
+			'created_at': (new Date (entry.created_time)).getTime () / 1000,
 			'show-url': 'https://www.facebook.com/' + entry.id.replace(/(\d+)(_)(\d+)/, '$1#$3')
 		}
 	},
@@ -143,10 +143,10 @@ var parse = {
 			'title': entry.name,
 			'content': entry.message || null,
 			'ancestor': entry.ancestor || null,
+			'created_at': (new Date (entry.created_time)).getTime () / 1000,
 			'show-url': 'https://www.facebook.com/' + entry.id.replace(/(\d+)(_)(\d+)/, '$1#$3')
 		}
 	},
-//end of trouble
 
 	'posts': function (url) {
 		return {
