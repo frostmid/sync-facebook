@@ -111,7 +111,6 @@ _.extend (module.exports.prototype, {
 		if(entry.comments && entry.comments.data.length)
 		{
 			return this.list ('/' + entry.id + '/comments', _.bind (function (result) {
-				
 				result.id = result.object_id ? result.object_id : result.id;
 				result.ancestor = result.parent ? result.parent : 'https://www.facebook.com/' + entry.id;
 				this.entry (result, 'comment');
@@ -123,7 +122,7 @@ _.extend (module.exports.prototype, {
 
 	getPosts: function (objectId) {
 		return this.list ('/' + (objectId || 'me') + '/posts', _.bind (function (entry) {
-			entry.ancestor = 'https://www.facebook.com/' + entry.id + '/posts';
+			//entry.ancestor = 'https://www.facebook.com/' + entry.id + '/posts';
 			entry.id = entry.object_id ? entry.object_id : entry.id;
 
 			return Q.all ([
@@ -136,7 +135,7 @@ _.extend (module.exports.prototype, {
 
 	getFeed: function (objectId) {
 		return this.list ('/' + objectId + '/feed', _.bind (function (entry) {
-			entry.ancestor = 'https://www.facebook.com/' + entry.id + '/feed' ;
+			//entry.ancestor = 'https://www.facebook.com/' + entry.id + '/feed' ;
 			entry.id = entry.object_id ? entry.object_id : entry.id;
 
 			return Q.all ([

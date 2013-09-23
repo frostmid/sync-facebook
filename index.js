@@ -6,8 +6,8 @@ var	_ = require ('lodash'),
 	Slave = require ('fos-sync-slave'),
 	Facebook = require ('./libs/facebook'),
 	url = process.argv [2] || 
-		//'http://127.0.0.1:8001'
-		'http://192.168.104.254:8001'
+		'http://127.0.0.1:8001'
+		//'http://192.168.104.254:8001'
 	;
 
 
@@ -118,6 +118,7 @@ var parse = {
 		}
 	},
 
+// Trouble is here!!!
 	'photo': function (entry) {
 		return {
 			'url': 'https://www.facebook.com/' + entry.id,
@@ -139,6 +140,7 @@ var parse = {
 			'ancestor': entry.ancestor || null
 		}
 	},
+//end of trouble
 
 	'posts': function (url) {
 		return {
