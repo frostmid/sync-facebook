@@ -6,7 +6,8 @@ var	_ = require ('lodash'),
 	Slave = require ('fos-sync-slave'),
 	Facebook = require ('./libs/facebook'),
 	url = process.argv [2] || 
-		'http://127.0.0.1:8001'
+		//'http://127.0.0.1:8001'
+		'http://192.168.1.202:8001'
 		//'http://192.168.104.254:8001'
 	;
 
@@ -24,7 +25,8 @@ var parse = {
 			'metrics': {
 				'comments': entry.comments ? entry.comments.count : 0,
 				'likes': entry.likes ? entry.likes.count: 0
-			}
+			},
+			'show-url': 'https://www.facebook.com/' + entry.id.replace(/(\d+)(_)(\d+)/, '$1#$3')
 		};
 	},
 
@@ -40,7 +42,8 @@ var parse = {
 			'metrics': {
 				'comments': entry.comments ? entry.comments.data.length : 0,
 				'likes': entry.likes ? entry.likes.data.length: 0
-			}
+			},
+			'show-url': 'https://www.facebook.com/' + entry.id.replace(/(\d+)(_)(\d+)/, '$1#$3')
 		};
 	},
 
@@ -114,7 +117,8 @@ var parse = {
 				'comments': entry.comment_count ? entry.comment_count : 0,
 				'likes': entry.like_count ? entry.like_count: 0
 			},
-			'issue': entry.issue || null
+			'issue': entry.issue || null,
+			'show-url': 'https://www.facebook.com/' + entry.id.replace(/(\d+)(_)(\d+)/, '$1#$3')
 		}
 	},
 
@@ -126,7 +130,8 @@ var parse = {
 			'author': entry.from ? ('https://www.facebook.com/' + entry.from.id) : null,
 			'title': entry.name,
 			'content': entry.message || null,
-			'ancestor': entry.ancestor || null
+			'ancestor': entry.ancestor || null,
+			'show-url': 'https://www.facebook.com/' + entry.id.replace(/(\d+)(_)(\d+)/, '$1#$3')
 		}
 	},
 
@@ -137,7 +142,8 @@ var parse = {
 			'entry-type': 'urn:fos:sync:entry-type/9414c18c2684a3d6dd8ae69430143e6d',
 			'title': entry.name,
 			'content': entry.message || null,
-			'ancestor': entry.ancestor || null
+			'ancestor': entry.ancestor || null,
+			'show-url': 'https://www.facebook.com/' + entry.id.replace(/(\d+)(_)(\d+)/, '$1#$3')
 		}
 	},
 //end of trouble
@@ -163,6 +169,7 @@ function facebook (slave, task, preEmit) {
 			
 			return slave.emitter (task).call (this, entry);
 		},
+		scrapeStart: task['scrape-start'],
 		parse: parse
 	})
 };

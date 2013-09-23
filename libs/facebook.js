@@ -12,12 +12,17 @@ module.exports = function Facebook (settings) {
 _.extend (module.exports.prototype, {
 	settings: {
 		base: 'https://graph.facebook.com',
+		showbase: 'https://www.facebook.com',
 		locale: 'ru_RU',
 		accessToken: null,
-		emit: null
+		emit: null,
+		scrapeStart: null
 	},
 
 	request: function (url) {
+		if (!url) {
+			throw new Error ('Request requires url to request: ' + url);
+		}
 		return request (url)
 			.then (JSON.parse);
 	},
@@ -37,6 +42,8 @@ _.extend (module.exports.prototype, {
 	},
 
 	list: function (endpoint, iterator) {
+		var self = this;
+
 		var fetchMore = _.bind (function (url) {
 			return this.request (url)
 				.then (process);
@@ -50,17 +57,22 @@ _.extend (module.exports.prototype, {
 			}
 
 			if (results.data) {
-				promises = _.map (results.data, iterator);
+				promises = _.map (
+					_.filter (results.data, function (entry) {
+						var created_time = entry.created_time ? ((new Date (entry.created_time)).getTime ()) : null,
+							scrapeStart = self.settings.scrapeStart;
+
+						return (created_time && scrapeStart && (created_time >= scrapeStart));
+					}),
+					iterator
+				);
 			}
 
-/*
-			if (results.paging) {
-				// TODO: Uncomment that (disabled to reduce limits usage while developing)
+			if (results.paging && results.paging.next) {
 				promises.push (
 					fetchMore (results.paging.next)
 				);
 			}
-			*/
 
 			return Q.all (promises);
 		};
@@ -256,4 +268,3 @@ _.extend (module.exports.prototype, {
 		}
 	}
 });
-
