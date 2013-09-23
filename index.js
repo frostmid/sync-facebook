@@ -13,6 +13,23 @@ var	_ = require ('lodash'),
 
 
 var parse = {
+	'page_milestone': function (entry) {
+		return {
+			'url': 'https://www.facebook.com/' + entry.id,
+			'entry-type': 'urn:fos:sync:entry-type/62c4870f3c8a6aee0dd7e88e9e4ce7c1',
+			'author': 'https://www.facebook.com/' + entry.from.id,
+			'ancestor': entry.ancestor || null,
+			'title': entry.title || null,
+			'content': entry.description || entry.message || null,
+			'created_at': (new Date (entry.created_time)).getTime () / 1000,
+			/*'metrics': {
+				'comments': entry.comments ? entry.comments.count : 0,
+				'likes': entry.likes ? entry.likes.count: 0
+			}
+			*/
+		}
+	},
+
 	'status': function (entry) {
 		return {
 			'url': 'https://www.facebook.com/' + entry.id,
@@ -218,6 +235,10 @@ function getObjectId (url) {
 
 	.use ('urn:fos:sync:feature/2bbecff23a38a658eb0d09414120d425', function (task) {
 		return facebook (this, task).getFeed (getObjectId (task.url));
+	})
+
+	.use ('urn:fos:sync:feature/62c4870f3c8a6aee0dd7e88e9e4bbe82', function (task) {
+		return facebook (this, task).getMilestones (getObjectId (task.url));
 	})
 
 	.use ('urn:fos:sync:feature/04c8d61b0ab10abd2b425c7cf6ff2bda', function (task) {

@@ -145,6 +145,19 @@ _.extend (module.exports.prototype, {
 		}, this));
 	},
 
+	getMilestones: function (objectId) {
+		return this.list ('/' + (objectId || 'me') + '/milestones', _.bind (function (entry) {
+			//entry.ancestor = 'https://www.facebook.com/' + entry.id + '/posts';
+			entry.id = entry.object_id ? entry.object_id : entry.id;
+
+			return Q.all ([
+				this.entry (entry, 'page_milestone'),
+				this.getComments (entry)
+			]);
+
+		}, this));
+	},
+
 	getFeed: function (objectId) {
 		return this.list ('/' + objectId + '/feed', _.bind (function (entry) {
 			//entry.ancestor = 'https://www.facebook.com/' + entry.id + '/feed' ;
