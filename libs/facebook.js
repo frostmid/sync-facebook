@@ -121,7 +121,7 @@ _.extend (module.exports.prototype, {
 		objectId = objectId || 'me';
 
 		return this.list ('/' + objectId + '/posts', _.bind (function (entry) {
-			entry.ancestor = 'https://www.facebook.com/' + objectId;
+			entry.ancestor = 'https://www.facebook.com/' + entry.id;
 
 			return Q.all ([
 				this.entry (entry),
@@ -229,31 +229,22 @@ _.extend (module.exports.prototype, {
 						return promise;
 					};
 
-					return getFields (entry).then(function (fields) {
-						var fields = _.map (
-							_.filter (fields, function (field) {
-								return field.name != 'payment_mobile_pricepoints';
-							}),
-							function (field) {
-								return field.name;
-							}
-						).join (',');
+					return getFields (entry)
+						.then(function (fields) {
+							var fields = _.map (
+								_.filter (fields, function (field) {
+									return field.name != 'payment_mobile_pricepoints';
+								}),
+								function (field) {
+									return field.name;
+								}
+							).join (',');
 
-						return self.get ('/' + id + '?fields=' + fields);
-					});
+							return self.get ('/' + id + '?fields=' + fields);
+						});
 				})
 				.then (function (entry) {
-					var type = entry.type;
-
-					if (!type && entry.metadata) {
-						type = entry.metadata.type;
-					}
-
-					self.entry (entry, type);
-
-					if (!type) {
-						console.error ('entry has no type', id, entry);
-					}
+					self.entry (entry);
 				});
 		}
 	}

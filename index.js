@@ -6,8 +6,8 @@ var	_ = require ('lodash'),
 	Slave = require ('fos-sync-slave'),
 	Facebook = require ('./libs/facebook'),
 	url = process.argv [2] || 
-		'http://127.0.0.1:8001'
-		//'http://192.168.104.254:8001'
+		//'http://127.0.0.1:8001'
+		'http://192.168.104.254:8001'
 	;
 
 
@@ -122,6 +122,7 @@ var parse = {
 		return {
 			'url': 'https://www.facebook.com/' + entry.id,
 			'entry-type': 'urn:fos:sync:entry-type/9414c18c2684a3d6dd8ae694301411dd',
+			'author': entry.from ? ('https://www.facebook.com/' + entry.from.id) : null,
 			'title': entry.name,
 			'content': entry.message || null,
 			'ancestor': entry.ancestor || null
@@ -131,13 +132,14 @@ var parse = {
 	'video': function (entry) {
 		return {
 			'url': 'https://www.facebook.com/' + entry.id,
+			'author': entry.from ? ('https://www.facebook.com/' + entry.from.id) : null,
 			'entry-type': 'urn:fos:sync:entry-type/9414c18c2684a3d6dd8ae69430143e6d',
 			'title': entry.name,
 			'content': entry.message || null,
 			'ancestor': entry.ancestor || null
 		}
 	}
-	
+
 	
 };
 
