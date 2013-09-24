@@ -53,14 +53,17 @@ var parse = {
 			'entry-type': 'urn:fos:sync:entry-type/2e63d22f3d4d9c2c1ab11ffc3481d853',
 			'author': 'https://www.facebook.com/' + entry.from.id,
 			'ancestor': entry.ancestor || null,
-			'title': entry.name,
-			'content': entry.message,
+			'title': entry.name || null,
+			'content': entry.message || null,
 			'created_at': (new Date (entry.created_time)).getTime () / 1000,
 			'metrics': {
 				'comments': entry.comments ? entry.comments.data.length : 0,
 				'likes': entry.likes ? entry.likes.data.length: 0
 			},
-			'show-url': 'https://www.facebook.com/' + entry.id.replace(/(\d+)(_)(\d+)/, '$1#$3')
+			'show-url': 'https://www.facebook.com/' + entry.id.replace(/(\d+)(_)(\d+)/, '$1#$3'),
+			'attached': {
+				'link': entry.link ? [entry.link] : null
+			}
 		};
 	},
 
@@ -73,7 +76,6 @@ var parse = {
 			'email': entry.email,
 			'avatar': entry.picture ? entry.picture.data.url : null,
 			'created_at': null,
-
 			'nickname': entry.first_name
 		};
 	},
@@ -127,7 +129,7 @@ var parse = {
 			'entry-type': 'urn:fos:sync:entry-type/e5ce7e5ee754309096f0efe1f70d7bac',
 			'author': entry.from ? ('https://www.facebook.com/' + entry.from.id) : null,
 			'ancestor': entry.ancestor || null,
-			'title': entry.name,
+			'title': entry.name || null,
 			'content': entry.message,
 			'created_at': (new Date (entry.created_time)).getTime () / 1000,
 			'metrics': {
@@ -140,28 +142,38 @@ var parse = {
 	},
 
 	'photo': function (entry) {
+		var source = entry.source || entry.picture || null;
+
 		return {
 			'url': 'https://www.facebook.com/' + entry.id,
 			'entry-type': 'urn:fos:sync:entry-type/9414c18c2684a3d6dd8ae694301411dd',
 			'author': entry.from ? ('https://www.facebook.com/' + entry.from.id) : null,
-			'title': entry.name,
-			'content': entry.message || null,
+			'title': entry.name || null,
+			'content': entry.description || entry.message || entry.caption || null,
 			'ancestor': entry.ancestor || null,
 			'created_at': (new Date (entry.created_time)).getTime () / 1000,
-			'show-url': 'https://www.facebook.com/' + entry.id.replace(/(\d+)(_)(\d+)/, '$1#$3')
+			'show-url': 'https://www.facebook.com/' + entry.id.replace(/(\d+)(_)(\d+)/, '$1#$3'),
+			'attached': {
+				'photos': source ? [source] : null
+			}
 		}
 	},
 
 	'video': function (entry) {
+		var source = entry.source || entry.picture || null;
+
 		return {
 			'url': 'https://www.facebook.com/' + entry.id,
 			'author': entry.from ? ('https://www.facebook.com/' + entry.from.id) : null,
 			'entry-type': 'urn:fos:sync:entry-type/9414c18c2684a3d6dd8ae69430143e6d',
-			'title': entry.name,
-			'content': entry.message || null,
+			'title': entry.name || null,
+			'content': entry.description || entry.message || entry.caption || null,
 			'ancestor': entry.ancestor || null,
 			'created_at': (new Date (entry.created_time)).getTime () / 1000,
-			'show-url': 'https://www.facebook.com/' + entry.id.replace(/(\d+)(_)(\d+)/, '$1#$3')
+			'show-url': 'https://www.facebook.com/' + entry.id.replace(/(\d+)(_)(\d+)/, '$1#$3'),
+			'attached': {
+				'video': source ? [source] : null
+			}
 		}
 	},
 
